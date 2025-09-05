@@ -1,119 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Fresher ID</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fresher ID Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-r from-indigo-700 to-purple-800 min-h-screen flex items-center justify-center text-white">
+<body class="bg-gradient-to-r from-purple-800 to-indigo-900 text-white min-h-screen flex flex-col items-center justify-center">
 
-  <div class="w-full max-w-md p-8 bg-white text-gray-900 rounded-2xl shadow-2xl">
-    <h1 class="text-3xl font-bold text-center mb-6">🎓 Generate Fresher ID</h1>
+  <h1 class="text-4xl font-bold mb-6">🎓 Fresher ID Card Generator</h1>
 
-    <form id="idForm" class="space-y-4">
-      <input id="name" type="text" placeholder="Full Name" class="w-full p-3 rounded-lg border" required>
-      <input id="roll" type="text" placeholder="Roll Number" class="w-full p-3 rounded-lg border" required>
-      <input id="nickname" type="text" placeholder="Fun Nickname" class="w-full p-3 rounded-lg border" required>
-      <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
-        Generate ID
-      </button>
-    </form>
+  <div class="bg-white/10 p-6 rounded-2xl shadow-lg w-96">
+    <label class="block mb-3">
+      <span class="text-sm">Full Name</span>
+      <input id="name" type="text" class="w-full mt-1 p-2 rounded bg-white/20 text-white outline-none"/>
+    </label>
 
-    <p id="statusMsg" class="mt-4 text-center text-sm text-purple-600 hidden">⏳ Generating your ID card...</p>
-    <div id="cardContainer" class="hidden mt-6"></div>
-    <button id="downloadBtn" class="hidden w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold">
-      ⬇️ Download as PDF
+    <label class="block mb-3">
+      <span class="text-sm">Roll Number</span>
+      <input id="roll" type="text" class="w-full mt-1 p-2 rounded bg-white/20 text-white outline-none"/>
+    </label>
+
+    <label class="block mb-3">
+      <span class="text-sm">Nickname</span>
+      <input id="nickname" type="text" class="w-full mt-1 p-2 rounded bg-white/20 text-white outline-none"/>
+    </label>
+
+    <button id="generateBtn" class="w-full mt-4 bg-green-600 hover:bg-green-700 py-2 rounded-lg font-bold shadow-md">
+      Generate ID Card
     </button>
+
+    <p id="status" class="text-center mt-4 text-sm italic"></p>
   </div>
 
+  <!-- Firebase + JS -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { firebaseConfig } from "./js/firebaseConfig.js";
     import jsPDF from "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js";
     import QRCode from "https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js";
 
+    // Init Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const form = document.getElementById("idForm");
-    const statusMsg = document.getElementById("statusMsg");
-    const cardContainer = document.getElementById("cardContainer");
-    const downloadBtn = document.getElementById("downloadBtn");
+    const generateBtn = document.getElementById("generateBtn");
+    const status = document.getElementById("status");
 
-    let latestCardData = null;
+    generateBtn.addEventListener("click", async () => {
+      const name = document.getElementById("name").value.trim();
+      const roll = document.getElementById("roll").value.trim();
+      const nickname = document.getElementById("nickname").value.trim();
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      statusMsg.classList.remove("hidden");
-      statusMsg.textContent = "⏳ Generating your ID card...";
-
-      // Check limit
-      const snapshot = await getDocs(collection(db, "fresherIDs"));
-      if (snapshot.size >= 50) {
-        statusMsg.textContent = "❌ ID limit reached (50 juniors only).";
+      if (!name || !roll || !nickname) {
+        alert("Please fill all fields!");
         return;
       }
 
-      const name = document.getElementById("name").value;
-      const roll = document.getElementById("roll").value;
-      const nickname = document.getElementById("nickname").value;
+      // Check limit (max 50)
+      const snapshot = await getDocs(collection(db, "fresherIDs"));
+      if (snapshot.size >= 50) {
+        status.textContent = "❌ ID card limit reached (50 only).";
+        status.classList.add("text-red-400");
+        generateBtn.disabled = true;
+        return;
+      }
+
+      // Show generating...
+      status.textContent = "⏳ Generating your ID card... Please wait";
+      status.classList.remove("text-red-400");
+      status.classList.add("text-yellow-300");
 
       // Save to Firestore
       const docRef = await addDoc(collection(db, "fresherIDs"), { name, roll, nickname });
-      const uniqueID = docRef.id;
 
-      latestCardData = { id: uniqueID, name, roll, nickname };
+      // Generate QR with Firestore doc ID + student info
+      const qrData = await QRCode.toDataURL(JSON.stringify({ id: docRef.id, name, roll, nickname }));
 
-      // Generate QR code with full JSON
-      const qrCanvas = document.createElement("canvas");
-      await QRCode.toCanvas(qrCanvas, JSON.stringify(latestCardData));
+      // Generate PDF card
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: [85, 54] });
+      pdf.setFillColor(88, 28, 135); // purple bg
+      pdf.rect(0, 0, 85, 54, "F");
 
-      // Show preview card
-      cardContainer.innerHTML = `
-        <div id="idCard" class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-2xl shadow-2xl p-6 text-center">
-          <h2 class="text-2xl font-bold mb-2">${name}</h2>
-          <p class="italic mb-1">${nickname}</p>
-          <p class="bg-white text-purple-700 px-3 py-1 rounded-full inline-block text-sm">Roll: ${roll}</p>
-          <p class="mt-3 text-xs">Law Department • Fresher 2025</p>
-          <div class="flex justify-center mt-3"><img src="${qrCanvas.toDataURL()}" class="w-20 h-20"/></div>
-        </div>
-      `;
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.text(name, 42, 20, { align: "center" });
 
-      cardContainer.classList.remove("hidden");
-      downloadBtn.classList.remove("hidden");
-      statusMsg.textContent = "✅ ID card ready!";
-    });
+      pdf.setFontSize(11);
+      pdf.text(`"${nickname}"`, 42, 30, { align: "center" });
 
-    // Download PDF
-    downloadBtn.addEventListener("click", async () => {
-      if (!latestCardData) return;
+      pdf.setFontSize(10);
+      pdf.setTextColor(255, 215, 0);
+      pdf.text(`Roll: ${roll}`, 42, 38, { align: "center" });
 
-      const doc = new jsPDF("p", "mm", "credit-card");
-      doc.setFillColor(88, 28, 135);
-      doc.rect(0, 0, 85.6, 53.98, "F");
+      pdf.addImage(qrData, "PNG", 5, 15, 25, 25);
 
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.text(latestCardData.name, 43, 15, { align: "center" });
+      // Download
+      pdf.save(`${name}_ID_Card.pdf`);
 
-      doc.setFontSize(11);
-      doc.text(`"${latestCardData.nickname}"`, 43, 25, { align: "center" });
-
-      doc.setFontSize(10);
-      doc.setTextColor(255, 215, 0);
-      doc.text(`Roll: ${latestCardData.roll}`, 43, 35, { align: "center" });
-
-      doc.setFontSize(7);
-      doc.setTextColor(255, 255, 255);
-      doc.text("Law Department • Fresher 2025", 43, 45, { align: "center" });
-
-      // Add QR
-      const qrData = await QRCode.toDataURL(JSON.stringify(latestCardData));
-      doc.addImage(qrData, "PNG", 60, 20, 20, 20);
-
-      doc.save(`${latestCardData.name}_ID.pdf`);
+      // Success message
+      status.textContent = "✅ ID Card Generated & Downloaded!";
+      status.classList.remove("text-yellow-300");
+      status.classList.add("text-green-400");
     });
   </script>
 </body>
