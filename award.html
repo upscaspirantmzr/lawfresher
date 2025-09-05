@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teachers’ Awards – Law Department</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-indigo-800 text-white shadow-lg py-6">
+    <div class="container mx-auto text-center">
+      <h1 class="text-3xl md:text-4xl font-bold">🏆 Teachers’ Day Awards</h1>
+      <p class="text-lg mt-2">Vote for your favorite teachers in each category</p>
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main class="flex-1 container mx-auto px-6 py-10">
+    
+    <!-- Voting Form -->
+    <section class="bg-white rounded-2xl shadow-lg p-8 mb-12 max-w-3xl mx-auto">
+      <h2 class="text-2xl font-semibold text-center text-indigo-700 mb-6">Cast Your Vote 🎓</h2>
+      <form id="awardsForm" class="space-y-6">
+
+        <!-- Most Inspiring -->
+        <div>
+          <label class="block mb-2 font-medium text-gray-700">⭐ Most Inspiring Teacher</label>
+          <select id="inspiring" class="w-full p-3 border rounded-lg">
+            <option value="">-- Select a Teacher --</option>
+            <option value="Dr. A">Dr. A</option>
+            <option value="Prof. B">Prof. B</option>
+            <option value="Dr. C">Dr. C</option>
+          </select>
+        </div>
+
+        <!-- Best Mentor -->
+        <div>
+          <label class="block mb-2 font-medium text-gray-700">🎓 Best Mentor</label>
+          <select id="mentor" class="w-full p-3 border rounded-lg">
+            <option value="">-- Select a Teacher --</option>
+            <option value="Dr. A">Dr. A</option>
+            <option value="Prof. B">Prof. B</option>
+            <option value="Dr. C">Dr. C</option>
+          </select>
+        </div>
+
+        <!-- Most Knowledgeable -->
+        <div>
+          <label class="block mb-2 font-medium text-gray-700">📖 Most Knowledgeable Teacher</label>
+          <select id="knowledgeable" class="w-full p-3 border rounded-lg">
+            <option value="">-- Select a Teacher --</option>
+            <option value="Dr. A">Dr. A</option>
+            <option value="Prof. B">Prof. B</option>
+            <option value="Dr. C">Dr. C</option>
+          </select>
+        </div>
+
+        <!-- Friendliest -->
+        <div>
+          <label class="block mb-2 font-medium text-gray-700">😄 Friendliest Teacher</label>
+          <select id="friendly" class="w-full p-3 border rounded-lg">
+            <option value="">-- Select a Teacher --</option>
+            <option value="Dr. A">Dr. A</option>
+            <option value="Prof. B">Prof. B</option>
+            <option value="Dr. C">Dr. C</option>
+          </select>
+        </div>
+
+        <button type="submit" 
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-lg transition transform hover:scale-105">
+          Submit Vote ✅
+        </button>
+      </form>
+    </section>
+
+    <!-- Results Section -->
+    <section class="max-w-4xl mx-auto">
+      <h2 class="text-2xl font-bold text-center text-indigo-800 mb-6">📊 Live Results</h2>
+      
+      <!-- Chart -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <canvas id="resultsChart"></canvas>
+      </div>
+
+      <!-- Card Results -->
+      <div id="resultsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Cards will be injected by JS -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-indigo-900 text-white py-4 text-center">
+    <p class="text-sm">© 2025 Law Department | Teachers’ Day Celebration Portal</p>
+  </footer>
+
+  <script type="module" src="./js/awards.js"></script>
+</body>
+</html>
