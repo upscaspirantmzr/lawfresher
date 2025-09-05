@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generate Your Fresher ID</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+
+  <h1 class="text-3xl font-bold mb-6">🎟️ Generate Your Digital Fresher ID</h1>
+
+  <!-- Form -->
+  <form id="idForm" class="bg-white p-6 rounded-xl shadow-xl space-y-4 w-80">
+    <input type="text" id="name" placeholder="Your Name" class="w-full border p-2 rounded" required>
+    <input type="text" id="roll" placeholder="Roll No" class="w-full border p-2 rounded" required>
+    <input type="text" id="nickname" placeholder="Fun Nickname" class="w-full border p-2 rounded">
+    <button class="w-full bg-purple-600 text-white py-2 rounded hover:bg-pink-600 transition">Generate</button>
+  </form>
+
+  <!-- Card Preview -->
+  <div id="idCard" class="hidden mt-8"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { firebaseConfig } from "./js/firebaseConfig.js";
+
+    // Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("idForm");
+    const idCard = document.getElementById("idCard");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const roll = document.getElementById("roll").value.trim();
+      const nickname = document.getElementById("nickname").value.trim() || "New Fresher";
+
+      // Random law title
+      const titles = ["Advocate of Awesomeness", "Legal Rockstar", "Case Cracker", "Justice Juggler", "Courtroom Star"];
+      const title = titles[Math.floor(Math.random() * titles.length)];
+
+      // Save to Firestore
+      await addDoc(collection(db, "fresherIDs"), { name, roll, nickname, title, createdAt: new Date().toISOString() });
+
+      // Generate Card
+      idCard.innerHTML = `
+        <div class="bg-gradient-to-r from-purple-600 to-pink-500 rounded-2xl shadow-2xl p-6 text-white w-80 relative overflow-hidden transform hover:scale-105 transition duration-500">
+          <div class="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-600 opacity-30 blur-2xl"></div>
+          <div class="relative text-center">
+            <h2 class="text-2xl font-bold">${name}</h2>
+            <p class="italic">${nickname}</p>
+            <p class="mt-1 text-lg">${title}</p>
+            <p class="text-sm mt-2 bg-white text-purple-700 px-3 py-1 rounded-full inline-block">Roll No: ${roll}</p>
+          </div>
+          <div class="relative mt-6 flex justify-center">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${roll}" class="rounded-lg shadow-lg border-2 border-white" />
+          </div>
+          <p class="relative text-center mt-4 text-sm tracking-wide">🎉 Fresher’s Fiesta – Law Dept 2025 🎉</p>
+        </div>
+      `;
+      idCard.classList.remove("hidden");
+    });
+  </script>
+</body>
+</html>
