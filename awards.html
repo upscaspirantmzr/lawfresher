@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Awards Voting</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="./js/awards.js" defer></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Header -->
+  <header class="bg-indigo-900 text-white py-6 shadow-lg">
+    <div class="container mx-auto px-6 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">🏆 Teachers' Day Awards</h1>
+      <a href="index.html" class="hover:text-yellow-400">⬅ Back</a>
+    </div>
+  </header>
+
+  <!-- Voting Form -->
+  <section class="container mx-auto px-6 py-12">
+    <h2 class="text-xl font-bold mb-4">Vote for Your Teachers</h2>
+    <form id="awardsForm" class="bg-white p-6 rounded-lg shadow-lg space-y-4">
+      <label class="block">
+        ⭐ Most Inspiring Teacher
+        <input type="text" id="inspiring" placeholder="Enter teacher name" class="w-full p-3 border rounded" required />
+      </label>
+      <label class="block">
+        🎓 Best Mentor
+        <input type="text" id="mentor" placeholder="Enter teacher name" class="w-full p-3 border rounded" required />
+      </label>
+      <label class="block">
+        📖 Most Knowledgeable Teacher
+        <input type="text" id="knowledgeable" placeholder="Enter teacher name" class="w-full p-3 border rounded" required />
+      </label>
+      <label class="block">
+        😄 Friendliest Teacher
+        <input type="text" id="friendly" placeholder="Enter teacher name" class="w-full p-3 border rounded" required />
+      </label>
+      <button type="submit" class="bg-indigo-800 text-white px-6 py-3 rounded hover:bg-indigo-700">Submit Vote</button>
+    </form>
+  </section>
+
+  <!-- Results Section -->
+  <section class="container mx-auto px-6 py-12">
+    <h2 class="text-xl font-bold mb-4">Live Results</h2>
+    <div id="resultsList" class="grid gap-4"></div>
+  </section>
+</body>
+</html>
