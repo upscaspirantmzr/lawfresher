@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Fresher IDs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-gray-900 to-purple-900 text-white min-h-screen p-6">
+  <h1 class="text-4xl font-bold text-center mb-6">📋 Admin Panel - Fresher IDs</h1>
+  
+  <div class="flex justify-center mb-6">
+    <button id="downloadAll" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl shadow-xl">
+      ⬇️ Download All ID Cards (PDF)
+    </button>
+  </div>
+  
+  <div id="list" class="grid md:grid-cols-3 sm:grid-cols-2 gap-6"></div>
+  
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { firebaseConfig } from "./js/firebaseConfig.js";
+    import jsPDF from "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js";
+    import QRCode from "https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const listDiv = document.getElementById("list");
+    const downloadAllBtn = document.getElementById("downloadAll");
+
+    async function loadData() {
+      const snapshot = await getDocs(collection(db, "fresherIDs"));
+      const docs = [];
+      snapshot.forEach(doc => {
+        docs.push({ id: doc.id, ...doc.data() });
+      });
+
+      // Display cards
+      listDiv.innerHTML = docs.map(d => `
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-xl shadow-lg p-4 text-center">
+          <h2 class="font-bold text-lg">${d.name}</h2>
+          <p class="italic">${d.nickname}</p>
+          <p class="text-sm mt-1">Roll: ${d.roll}</p>
+        </div>
+      `).join("");
+
+      // Bulk PDF download
+      downloadAllBtn.addEventListener("click", async () => {
+        const pdf = new jsPDF();
+        let x = 10, y = 20, count = 0;
+
+        for (const d of docs) {
+          const qrData = await QRCode.toDataURL(JSON.stringify(d));
+
+          // Draw card
+          pdf.setFillColor(88, 28, 135);
+          pdf.rect(x, y, 85, 54, "F");
+          pdf.setTextColor(255,255,255);
+          pdf.setFontSize(12);
+          pdf.text(d.name, x+42, y+15, {align:"center"});
+          pdf.setFontSize(10);
+          pdf.text(`"${d.nickname}"`, x+42, y+25, {align:"center"});
+          pdf.setFontSize(9);
+          pdf.setTextColor(255,215,0);
+          pdf.text(`Roll: ${d.roll}`, x+42, y+35, {align:"center"});
+          pdf.addImage(qrData,"PNG",x+60,y+20,20,20);
+
+          // Arrange grid
+          count++;
+          x += 95;
+          if (count % 2 === 0) { x = 10; y += 65; }
+          if (count % 8 === 0) { pdf.addPage(); x=10; y=20; }
+        }
+
+        pdf.save("All_Fresher_IDs.pdf");
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
