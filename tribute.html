@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tribute Wall</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="./js/tribute.js" defer></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Header -->
+  <header class="bg-indigo-900 text-white py-6 shadow-lg">
+    <div class="container mx-auto px-6 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">💌 Tribute Wall</h1>
+      <a href="index.html" class="hover:text-yellow-400">⬅ Back</a>
+    </div>
+  </header>
+
+  <!-- Tribute Form -->
+  <section class="container mx-auto px-6 py-12">
+    <h2 class="text-xl font-bold mb-4">Leave Your Message</h2>
+    <form id="tributeForm" class="bg-white p-6 rounded-lg shadow-lg">
+      <input type="text" id="name" placeholder="Your Name" class="w-full p-3 border rounded mb-4" required />
+      <textarea id="message" placeholder="Your Tribute Message" class="w-full p-3 border rounded mb-4" required></textarea>
+      <button type="submit" class="bg-indigo-800 text-white px-6 py-3 rounded hover:bg-indigo-700">Submit</button>
+    </form>
+  </section>
+
+  <!-- Tribute Messages -->
+  <section class="container mx-auto px-6 py-12">
+    <h2 class="text-xl font-bold mb-4">Messages from Students</h2>
+    <div id="tributesList" class="grid gap-4"></div>
+  </section>
+</body>
+</html>
