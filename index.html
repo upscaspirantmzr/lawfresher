@@ -1,49 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teachers' Day Celebration – Law Department</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Law Fresher’s Fiesta</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 min-h-screen flex flex-col">
+<body class="bg-gradient-to-r from-purple-700 to-pink-600 text-white flex flex-col items-center justify-center h-screen text-center">
 
-  <!-- Header -->
-  <header class="bg-indigo-800 text-white shadow-lg py-6">
-    <div class="container mx-auto text-center">
-      <h1 class="text-3xl md:text-4xl font-bold">🎉 Happy Teachers’ Day 🎉</h1>
-      <p class="text-lg mt-2">Law Department – Celebrating Our Mentors</p>
-    </div>
-  </header>
+  <h1 class="text-4xl font-bold mb-4">🎉 Law Fresher’s Fiesta 2025 🎉</h1>
+  <p class="mb-6">Welcome to the party portal – Let’s make it unforgettable!</p>
 
-  <!-- Hero Section -->
-  <section class="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
-    <h2 class="text-2xl md:text-3xl font-semibold text-gray-800 mb-4">
-      Honoring Our Guiding Lights
-    </h2>
-    <p class="max-w-2xl text-gray-700 mb-8">
-      On this Teachers’ Day, we celebrate the dedication, wisdom, and inspiration our professors bring into our lives. 
-      Join us in leaving a heartfelt tribute and voting in the Teachers’ Awards!
-    </p>
+  <!-- Countdown -->
+  <div id="countdown" class="text-3xl font-mono mb-6"></div>
 
-    <!-- Buttons -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <a href="tribute.html" 
-         class="bg-pink-500 hover:bg-pink-600 text-white px-8 py-4 rounded-2xl shadow-lg text-xl font-semibold transition transform hover:scale-105">
-        💌 Leave a Tribute
-      </a>
+  <!-- Buttons -->
+  <div class="space-x-4">
+    <a href="id.html" class="bg-white text-purple-700 px-6 py-3 rounded-xl shadow-lg hover:bg-pink-100 transition">Generate Your ID</a>
+  </div>
 
-      <a href="awards.html" 
-         class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl shadow-lg text-xl font-semibold transition transform hover:scale-105">
-        🏆 Vote for Awards
-      </a>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="bg-indigo-900 text-white py-4 text-center">
-    <p class="text-sm">© 2025 Law Department | Teachers’ Day Celebration Portal</p>
-  </footer>
-
+  <script>
+    // Simple countdown
+    const eventDate = new Date("2025-09-15T18:00:00").getTime(); 
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const diff = eventDate - now;
+      if (diff < 0) {
+        document.getElementById("countdown").innerText = "The Party Has Started 🎊!";
+        clearInterval(timer);
+        return;
+      }
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      document.getElementById("countdown").innerText = `${d}d ${h}h ${m}m ${s}s`;
+    }, 1000);
+  </script>
 </body>
 </html>
