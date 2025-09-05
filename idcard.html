@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Fresher ID</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-indigo-700 to-purple-800 min-h-screen flex items-center justify-center text-white">
+
+  <div class="w-full max-w-md p-8 bg-white text-gray-900 rounded-2xl shadow-2xl">
+    <h1 class="text-3xl font-bold text-center mb-6">🎓 Generate Fresher ID</h1>
+
+    <form id="idForm" class="space-y-4">
+      <input id="name" type="text" placeholder="Full Name" class="w-full p-3 rounded-lg border" required>
+      <input id="roll" type="text" placeholder="Roll Number" class="w-full p-3 rounded-lg border" required>
+      <input id="nickname" type="text" placeholder="Fun Nickname" class="w-full p-3 rounded-lg border" required>
+      <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
+        Generate ID
+      </button>
+    </form>
+
+    <p id="statusMsg" class="mt-4 text-center text-sm text-purple-600 hidden">⏳ Generating your ID card...</p>
+    <div id="cardContainer" class="hidden mt-6"></div>
+    <button id="downloadBtn" class="hidden w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold">
+      ⬇️ Download as PDF
+    </button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { firebaseConfig } from "./js/firebaseConfig.js";
+
+    // PDF library
+    import jsPDF from "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("idForm");
+    const statusMsg = document.getElementById("statusMsg");
+    const cardContainer = document.getElementById("cardContainer");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    let latestCardData = null;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusMsg.classList.remove("hidden");
+      statusMsg.textContent = "⏳ Generating your ID card...";
+
+      // Check total juniors (max 50)
+      const snapshot = await getDocs(collection(db, "fresherIDs"));
+      if (snapshot.size >= 50) {
+        statusMsg.textContent = "❌ ID limit reached (50 juniors only).";
+        return;
+      }
+
+      const name = document.getElementById("name").value;
+      const roll = document.getElementById("roll").value;
+      const nickname = document.getElementById("nickname").value;
+
+      // Save to Firestore
+      await addDoc(collection(db, "fresherIDs"), { name, roll, nickname });
+
+      // Store latest data
+      latestCardData = { name, roll, nickname };
+
+      // Show card preview
+      cardContainer.innerHTML = `
+        <div id="idCard" class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-2xl shadow-2xl p-6 text-center">
+          <h2 class="text-2xl font-bold mb-2">${name}</h2>
+          <p class="italic mb-1">${nickname}</p>
+          <p class="bg-white text-purple-700 px-3 py-1 rounded-full inline-block text-sm">Roll: ${roll}</p>
+          <p class="mt-3 text-xs">Law Department • Fresher 2025</p>
+        </div>
+      `;
+
+      cardContainer.classList.remove("hidden");
+      downloadBtn.classList.remove("hidden");
+      statusMsg.textContent = "✅ ID card ready!";
+    });
+
+    // Download as PDF
+    downloadBtn.addEventListener("click", () => {
+      if (!latestCardData) return;
+
+      const doc = new jsPDF("p", "mm", "credit-card"); // ID card size
+      doc.setFillColor(88, 28, 135); // purple
+      doc.rect(0, 0, 85.6, 53.98, "F"); // background
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.text(latestCardData.name, 43, 20, { align: "center" });
+
+      doc.setFontSize(11);
+      doc.text(`"${latestCardData.nickname}"`, 43, 30, { align: "center" });
+
+      doc.setFontSize(10);
+      doc.setTextColor(255, 215, 0);
+      doc.text(`Roll: ${latestCardData.roll}`, 43, 40, { align: "center" });
+
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text("Law Department • Fresher 2025", 43, 48, { align: "center" });
+
+      doc.save(`${latestCardData.name}_ID.pdf`);
+    });
+  </script>
+</body>
+</html>
