@@ -29,11 +29,10 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { firebaseConfig } from "./js/firebaseConfig.js";
-
-    // PDF library
     import jsPDF from "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js";
+    import QRCode from "https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js";
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -50,7 +49,7 @@
       statusMsg.classList.remove("hidden");
       statusMsg.textContent = "⏳ Generating your ID card...";
 
-      // Check total juniors (max 50)
+      // Check limit
       const snapshot = await getDocs(collection(db, "fresherIDs"));
       if (snapshot.size >= 50) {
         statusMsg.textContent = "❌ ID limit reached (50 juniors only).";
@@ -62,18 +61,23 @@
       const nickname = document.getElementById("nickname").value;
 
       // Save to Firestore
-      await addDoc(collection(db, "fresherIDs"), { name, roll, nickname });
+      const docRef = await addDoc(collection(db, "fresherIDs"), { name, roll, nickname });
+      const uniqueID = docRef.id;
 
-      // Store latest data
-      latestCardData = { name, roll, nickname };
+      latestCardData = { id: uniqueID, name, roll, nickname };
 
-      // Show card preview
+      // Generate QR code with full JSON
+      const qrCanvas = document.createElement("canvas");
+      await QRCode.toCanvas(qrCanvas, JSON.stringify(latestCardData));
+
+      // Show preview card
       cardContainer.innerHTML = `
         <div id="idCard" class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-2xl shadow-2xl p-6 text-center">
           <h2 class="text-2xl font-bold mb-2">${name}</h2>
           <p class="italic mb-1">${nickname}</p>
           <p class="bg-white text-purple-700 px-3 py-1 rounded-full inline-block text-sm">Roll: ${roll}</p>
           <p class="mt-3 text-xs">Law Department • Fresher 2025</p>
+          <div class="flex justify-center mt-3"><img src="${qrCanvas.toDataURL()}" class="w-20 h-20"/></div>
         </div>
       `;
 
@@ -82,28 +86,32 @@
       statusMsg.textContent = "✅ ID card ready!";
     });
 
-    // Download as PDF
-    downloadBtn.addEventListener("click", () => {
+    // Download PDF
+    downloadBtn.addEventListener("click", async () => {
       if (!latestCardData) return;
 
-      const doc = new jsPDF("p", "mm", "credit-card"); // ID card size
-      doc.setFillColor(88, 28, 135); // purple
-      doc.rect(0, 0, 85.6, 53.98, "F"); // background
+      const doc = new jsPDF("p", "mm", "credit-card");
+      doc.setFillColor(88, 28, 135);
+      doc.rect(0, 0, 85.6, 53.98, "F");
 
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
-      doc.text(latestCardData.name, 43, 20, { align: "center" });
+      doc.text(latestCardData.name, 43, 15, { align: "center" });
 
       doc.setFontSize(11);
-      doc.text(`"${latestCardData.nickname}"`, 43, 30, { align: "center" });
+      doc.text(`"${latestCardData.nickname}"`, 43, 25, { align: "center" });
 
       doc.setFontSize(10);
       doc.setTextColor(255, 215, 0);
-      doc.text(`Roll: ${latestCardData.roll}`, 43, 40, { align: "center" });
+      doc.text(`Roll: ${latestCardData.roll}`, 43, 35, { align: "center" });
 
-      doc.setFontSize(8);
+      doc.setFontSize(7);
       doc.setTextColor(255, 255, 255);
-      doc.text("Law Department • Fresher 2025", 43, 48, { align: "center" });
+      doc.text("Law Department • Fresher 2025", 43, 45, { align: "center" });
+
+      // Add QR
+      const qrData = await QRCode.toDataURL(JSON.stringify(latestCardData));
+      doc.addImage(qrData, "PNG", 60, 20, 20, 20);
 
       doc.save(`${latestCardData.name}_ID.pdf`);
     });
