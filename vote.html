@@ -1,145 +1,52 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Vote — Class Rep</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>.candidate:hover{ transform: translateY(-4px); }</style>
+  <meta charset="UTF-8">
+  <title>Vote</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
-  <header class="bg-white shadow">
-    <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold">Voting Booth</h1>
-      <div>
-        <button id="signInBtn" class="px-3 py-1 bg-blue-600 text-white rounded">Sign in (Google)</button>
-        <button id="signOutBtn" class="px-3 py-1 bg-gray-200 rounded hidden">Sign out</button>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-5xl mx-auto px-6 py-10">
-    <div class="mb-4">
-      <div id="userInfo" class="text-sm text-gray-600">Please sign in to vote.</div>
-    </div>
-
-    <div id="candidates" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-
-    <div class="mt-8 flex justify-end">
-      <button id="submitBtn" class="px-6 py-3 bg-indigo-600 text-white rounded disabled:opacity-60" disabled>Submit Vote</button>
-    </div>
-
-    <p id="msg" class="mt-4 text-sm"></p>
-  </main>
+<body>
+  <h2>🗳️ Cast Your Vote</h2>
+  <div class="form">
+    <input id="roll" placeholder="Enter Roll Number" />
+    <div id="candidates"></div>
+    <p id="status"></p>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { firebaseConfig } from "./js/firebaseConfig.js";
+    import { firebaseConfig } from "./firebaseConfig.js";
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
 
-    const signInBtn = document.getElementById('signInBtn');
-    const signOutBtn = document.getElementById('signOutBtn');
-    const userInfo = document.getElementById('userInfo');
-    const candidatesEl = document.getElementById('candidates');
-    const submitBtn = document.getElementById('submitBtn');
-    const msg = document.getElementById('msg');
-
-    let selectedId = null;
-    let currentUser = null;
-
-    // Load candidate cards
-    async function loadCandidates(){
-      const snap = await getDocs(collection(db,'candidates'));
-      if (snap.empty) {
-        candidatesEl.innerHTML = `<div class="text-gray-500">No candidates yet. Contact admin.</div>`;
-        return;
-      }
-      const docs = [];
-      snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
-      candidatesEl.innerHTML = docs.map(c => `
-        <div class="candidate bg-white p-5 rounded-lg shadow cursor-pointer" data-id="${c.id}">
-          <div class="flex gap-4 items-center">
-            <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-lg">${(c.symbol||'✪')}</div>
-            <div>
-              <div class="font-semibold">${c.name}</div>
-              <div class="text-sm text-gray-500">${c.manifesto || ''}</div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-      document.querySelectorAll('.candidate').forEach(el => {
-        el.addEventListener('click', () => {
-          if (!currentUser) { msg.innerText = 'Sign in to select candidate.'; return; }
-          document.querySelectorAll('.candidate').forEach(x => x.classList.remove('ring-4','ring-indigo-300'));
-          el.classList.add('ring-4','ring-indigo-300');
-          selectedId = el.dataset.id;
-          submitBtn.disabled = false;
-          msg.innerText = '';
-        });
+    async function loadCandidates() {
+      const snap = await getDocs(collection(db, "candidates"));
+      let html = "";
+      snap.forEach(docSnap => {
+        const c = docSnap.data();
+        html += `<button onclick="vote('${docSnap.id}')">Vote for ${c.name}</button>`;
       });
+      document.getElementById("candidates").innerHTML = html;
     }
 
-    // Auth handlers
-    signInBtn.addEventListener('click', async () => {
-      try { await signInWithPopup(auth, provider); } catch(e) { alert('Sign in failed: ' + e.message); }
-    });
-    signOutBtn.addEventListener('click', async () => { await signOut(auth); location.reload(); });
-
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      if (user) {
-        signInBtn.classList.add('hidden'); signOutBtn.classList.remove('hidden');
-        userInfo.innerText = `Signed in as ${user.displayName} (${user.email})`;
-        // check if user has already voted
-        const voteDoc = await getDoc(doc(db, 'votes', user.uid));
-        if (voteDoc.exists()) {
-          submitBtn.disabled = true;
-          msg.innerText = 'You have already voted.';
-        } else {
-          submitBtn.disabled = false;
-        }
-      } else {
-        signInBtn.classList.remove('hidden'); signOutBtn.classList.add('hidden');
-        userInfo.innerText = 'Please sign in with Google to vote.';
-        submitBtn.disabled = true;
+    window.vote = async (candidateId) => {
+      const roll = document.getElementById("roll").value.trim();
+      if (!roll) {
+        alert("⚠️ Enter your Roll Number");
+        return;
       }
-    });
-
-    // Submit vote: create document votes/{uid} = {candidateId, timestamp}
-    submitBtn.addEventListener('click', async () => {
-      if (!currentUser) return alert('Sign in required.');
-      if (!selectedId) return alert('Select a candidate first.');
-      msg.innerText = 'Submitting vote...';
-
-      try {
-        // check election status
-        const metaSnap = await getDoc(doc(db,'election','meta'));
-        if (!metaSnap.exists() || metaSnap.data().status !== 'running') {
-          msg.innerText = 'Election is not running currently.';
-          return;
-        }
-
-        // create vote doc with uid as doc id (fails if exists)
-        await setDoc(doc(db, 'votes', currentUser.uid), {
-          candidateId: selectedId,
-          timestamp: new Date().toISOString(),
-          voterName: currentUser.displayName || '',
-          voterEmail: currentUser.email || ''
-        });
-        msg.innerText = '✅ Vote recorded. Thank you!';
-        submitBtn.disabled = true;
-      } catch (e) {
-        console.error(e);
-        msg.innerText = '❌ Could not register vote (maybe you already voted).';
+      const voteDoc = doc(db, "votes", roll);
+      const existing = await getDoc(voteDoc);
+      if (existing.exists()) {
+        document.getElementById("status").innerText = "❌ You have already voted.";
+        return;
       }
-    });
+      await setDoc(voteDoc, { candidateId, time: new Date().toISOString() });
+      document.getElementById("status").innerText = "✅ Your vote has been cast.";
+    };
 
-    // init
     loadCandidates();
   </script>
 </body>
