@@ -1,53 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Vote</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Vote | Class Election</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>🗳️ Cast Your Vote</h2>
-  <div class="form">
-    <input id="roll" placeholder="Enter Roll Number" />
-    <div id="candidates"></div>
-    <p id="status"></p>
-  </div>
+<h2>Cast Your Vote</h2>
+<div class="form">
+<input id="roll" placeholder="Enter Your Roll Number" />
+<button id="loadBtn">Show Candidates</button>
+</div>
+<div id="candidates"></div>
+<p id="status"></p>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { firebaseConfig } from "./firebaseConfig.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, increment, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebaseConfig.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    async function loadCandidates() {
-      const snap = await getDocs(collection(db, "candidates"));
-      let html = "";
-      snap.forEach(docSnap => {
-        const c = docSnap.data();
-        html += `<button onclick="vote('${docSnap.id}')">Vote for ${c.name}</button>`;
-      });
-      document.getElementById("candidates").innerHTML = html;
-    }
+document.getElementById("loadBtn").addEventListener("click", async ()=>{
+  const roll=document.getElementById("roll").value.trim();
+  if(!roll){ alert("Enter roll"); return; }
 
-    window.vote = async (candidateId) => {
-      const roll = document.getElementById("roll").value.trim();
-      if (!roll) {
-        alert("⚠️ Enter your Roll Number");
-        return;
-      }
-      const voteDoc = doc(db, "votes", roll);
-      const existing = await getDoc(voteDoc);
-      if (existing.exists()) {
-        document.getElementById("status").innerText = "❌ You have already voted.";
-        return;
-      }
-      await setDoc(voteDoc, { candidateId, time: new Date().toISOString() });
-      document.getElementById("status").innerText = "✅ Your vote has been cast.";
-    };
+  const voteDoc = await getDoc(doc(db,"votes",roll));
+  if(voteDoc.exists()){ document.getElementById("status").innerText="❌ You already voted"; return; }
 
-    loadCandidates();
-  </script>
+  const snap = await getDocs(collection(db,"candidates"));
+  let html="<h3>Select Candidate:</h3>";
+  snap.forEach(c=>{
+    const cand = c.data();
+    html+=`<button onclick="vote('${c.id}','${roll}')">${cand.name} (${cand.roll})</button><br>`;
+  });
+  document.getElementById("candidates").innerHTML=html;
+});
+
+window.vote=async(cid,roll)=>{
+  try{
+    await updateDoc(doc(db,"candidates",cid),{votes:increment(1)});
+    await setDoc(doc(db,"votes",roll),{candidate:cid});
+    document.getElementById("status").innerText="✅ Vote cast";
+    document.getElementById("candidates").innerHTML="";
+  }catch(err){ document.getElementById("status").innerText="❌ "+err.message; }
+};
+</script>
 </body>
 </html>
