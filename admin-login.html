@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login | Class Election</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>🗳️ Admin Login</h2>
+  <div class="form">
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <p id="status"></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { firebaseConfig } from "./firebaseConfig.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCred.user.uid;
+
+        const adminDoc = await getDoc(doc(db, "admins", uid));
+        if (adminDoc.exists()) {
+          // ✅ Save session in localStorage
+          localStorage.setItem("adminUID", uid);
+          window.location.href = "admin-dashboard.html"; 
+        } else {
+          document.getElementById("status").innerText = "❌ Access denied. Not an admin.";
+        }
+      } catch (err) {
+        document.getElementById("status").innerText = "❌ " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
