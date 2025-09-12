@@ -1,82 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Register - Class Election</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: linear-gradient(to right, #00c6ff, #0072ff);
-      font-family: 'Poppins', sans-serif;
-    }
-    .register-card {
-      max-width: 450px;
-      margin: 100px auto;
-      padding: 30px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-    }
-    .register-card h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #0072ff;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Register - Class Election</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background: linear-gradient(to right, #00c6ff, #0072ff); font-family: 'Poppins', sans-serif; }
+  .card { max-width: 450px; margin: 100px auto; padding: 30px; background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+  h2 { text-align: center; margin-bottom: 20px; color: #0072ff; }
+</style>
 </head>
 <body>
-  <div class="register-card">
-    <h2>Register</h2>
-    <form id="registerForm">
-      <div class="mb-3">
-        <label class="form-label">Name</label>
-        <input type="text" class="form-control" id="name" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" required>
-      </div>
-      <button type="submit" class="btn btn-success w-100">Register</button>
-      <p class="mt-3 text-center">Already have an account? <a href="login.html">Login</a></p>
-    </form>
-  </div>
+<div class="card">
+  <h2>Student Registration</h2>
+  <form id="registerForm">
+    <div class="mb-3"><input type="text" class="form-control" id="name" placeholder="Full Name" required></div>
+    <div class="mb-3"><input type="email" class="form-control" id="email" placeholder="Email" required></div>
+    <div class="mb-3"><input type="password" class="form-control" id="password" placeholder="Password" required></div>
+    <button type="submit" class="btn btn-success w-100">Register</button>
+  </form>
+  <p class="mt-3 text-center">Already registered? <a href="login.html">Login</a></p>
+</div>
 
-  <script type="module">
-    // Firebase SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAbnFwUEduIFg7uC7mqy10ebB-bEFOv-z0",
-      authDomain: "lawfresher.firebaseapp.com",
-      projectId: "lawfresher",
-      storageBucket: "lawfresher.firebasestorage.app",
-      messagingSenderId: "670819580273",
-      appId: "1:670819580273:web:743d354f801d5a92f6ded0",
-      measurementId: "G-PD0NGZ2BR2"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyAbnFwUEduIFg7uC7mqy10ebB-bEFOv-z0",
+  authDomain: "lawfresher.firebaseapp.com",
+  projectId: "lawfresher",
+  storageBucket: "lawfresher.firebasestorage.app",
+  messagingSenderId: "670819580273",
+  appId: "1:670819580273:web:743d354f801d5a92f6ded0",
+  measurementId: "G-PD0NGZ2BR2"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+const usersCol = collection(db, "users");
 
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: name });
-        alert("Registration successful!");
-        window.location.href = "login.html";
-      } catch (error) {
-        alert(error.message);
-      }
-    });
-  </script>
+document.getElementById("registerForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  // Limit max 60 students
+  const snapshot = await getDocs(usersCol);
+  if(snapshot.size >= 60){ alert("Registration limit reached (60 students)."); return; }
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, "users", userCredential.user.uid), { name: name, email: email, voted: false });
+    alert("Registration successful!");
+    window.location.href = "login.html";
+  } catch(err){ alert(err.message); }
+});
+</script>
 </body>
 </html>
