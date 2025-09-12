@@ -1,79 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Admin Dashboard | Class Election</title>
+  <title>Admin Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>⚖️ Admin Dashboard</h2>
-  <button id="logoutBtn">Logout</button>
-  <div id="panel" style="display:none;">
-    <h3>Candidate Management</h3>
-    <input id="cName" placeholder="Candidate Name" />
-    <input id="cRoll" placeholder="Roll Number" />
-    <button id="addCandidateBtn">Add Candidate</button>
-    <p id="status"></p>
+<h2>Admin Dashboard</h2>
+<button id="logoutBtn">Logout</button>
 
-    <h3>🗳️ Live Results</h3>
-    <div id="results"></div>
-  </div>
+<div class="panel" id="panel">
+<h3>Add Candidate</h3>
+<input id="cName" placeholder="Candidate Name" />
+<input id="cRoll" placeholder="Roll Number" />
+<button id="addCandidateBtn">Add Candidate</button>
+<p id="status"></p>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { firebaseConfig } from "./firebaseConfig.js";
+<h3>Live Results</h3>
+<div id="results"></div>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebaseConfig.js";
 
-    // ✅ Check if admin session exists
-    const adminUID = localStorage.getItem("adminUID");
-    if (!adminUID) {
-      window.location.href = "admin-login.html"; // redirect if not logged in
-    } else {
-      document.getElementById("panel").style.display = "block";
-      loadResults();
-    }
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    // Logout
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await signOut(auth);
-      localStorage.removeItem("adminUID");
-      window.location.href = "admin-login.html";
-    });
+if(!localStorage.getItem("adminEmail")){ window.location.href="admin-login.html"; }
 
-    // Add Candidate
-    document.getElementById("addCandidateBtn").addEventListener("click", async () => {
-      const name = document.getElementById("cName").value.trim();
-      const roll = document.getElementById("cRoll").value.trim();
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  localStorage.removeItem("adminEmail");
+  window.location.href="admin-login.html";
+});
 
-      if (!name || !roll) {
-        alert("⚠️ Please fill candidate details");
-        return;
-      }
+document.getElementById("addCandidateBtn").addEventListener("click", async ()=>{
+  const name = document.getElementById("cName").value.trim();
+  const roll = document.getElementById("cRoll").value.trim();
+  if(!name || !roll) { alert("Enter details"); return; }
+  await addDoc(collection(db,"candidates"), {name, roll, votes:0});
+  document.getElementById("status").innerText = "✅ Candidate added";
+  loadResults();
+});
 
-      try {
-        await addDoc(collection(db, "candidates"), { name, roll });
-        document.getElementById("status").innerText = "✅ Candidate added";
-        loadResults();
-      } catch (err) {
-        document.getElementById("status").innerText = "❌ " + err.message;
-      }
-    });
+async function loadResults(){
+  const snap = await getDocs(collection(db,"candidates"));
+  let html="";
+  snap.forEach(doc=>{
+    const c = doc.data();
+    html+= `<p>${c.name} (${c.roll}) - Votes: ${c.votes}</p>`;
+  });
+  document.getElementById("results").innerHTML = html;
+}
 
-    // Load live results
-    async function loadResults() {
-      const snap = await getDocs(collection(db, "candidates"));
-      let html = "";
-      snap.forEach(doc => {
-        const c = doc.data();
-        html += `<p>${c.name} (${c.roll})</p>`;
-      });
-      document.getElementById("results").innerHTML = html;
-    }
-  </script>
+loadResults();
+</script>
 </body>
 </html>
