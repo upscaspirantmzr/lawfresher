@@ -42,23 +42,39 @@ const db = getFirestore(app);
 
 const usersCol = collection(db, "users");
 
-document.getElementById("registerForm").addEventListener("submit", async e=>{
+document.getElementById("registerForm").addEventListener("submit", async e => {
   e.preventDefault();
 
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("email").value;
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
-  // Limit max 60 students
+  // Check max 60 students
   const snapshot = await getDocs(usersCol);
-  if(snapshot.size >= 60){ alert("Registration limit reached (60 students)."); return; }
+  if(snapshot.size >= 60){
+    alert("Registration limit reached (60 students).");
+    return;
+  }
 
   try {
+    // Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, "users", userCredential.user.uid), { name: name, email: email, voted: false });
+    const uid = userCredential.user.uid;
+
+    // Save user info in Firestore
+    await setDoc(doc(db, "users", uid), {
+      name: name,
+      email: email,
+      voted: false
+    });
+
     alert("Registration successful!");
     window.location.href = "login.html";
-  } catch(err){ alert(err.message); }
+
+  } catch(error) {
+    console.error("Error during registration:", error);
+    alert(error.message);
+  }
 });
 </script>
 </body>
