@@ -7,7 +7,7 @@
 <style>
   body { font-family: 'Poppins', sans-serif; background: #f4f6f9; }
   .container { margin-top: 50px; }
-  .candidate-card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  .candidate-card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align:center; }
   .candidate-card:hover { transform: translateY(-3px); transition: 0.3s; }
   .btn-vote { background: #0072ff; color: #fff; font-weight: bold; }
 </style>
@@ -21,7 +21,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAbnFwUEduIFg7uC7mqy10ebB-bEFOv-z0",
@@ -32,21 +32,24 @@ const firebaseConfig = {
   appId: "1:670819580273:web:743d354f801d5a92f6ded0",
   measurementId: "G-PD0NGZ2BR2"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 const candidateList = document.getElementById("candidateList");
+const candidateCol = collection(db, "candidates");
+const usersCol = collection(db, "users");
 
 onAuthStateChanged(auth, async user => {
-  if(!user) { alert("Please login first."); window.location.href="login.html"; return; }
-  const snapshot = await getDocs(collection(db, "candidates"));
+  if(!user){ alert("Please login first."); window.location.href="login.html"; return; }
+
+  const snapshot = await getDocs(candidateCol);
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const col = document.createElement("div");
     col.className = "col-md-4";
     col.innerHTML = `
-      <div class="candidate-card text-center">
+      <div class="candidate-card">
         <h5>${data.name}</h5>
         <p>${data.desc || ''}</p>
         <button class="btn btn-vote mt-2">Vote</button>
@@ -71,7 +74,7 @@ async function castVote(uid, candidateId) {
     });
     alert("Vote submitted successfully!");
     location.reload();
-  } catch(e) { alert(e); }
+  } catch(e){ alert(e); }
 }
 </script>
 </body>
