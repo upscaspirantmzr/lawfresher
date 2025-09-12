@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Candidates</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>📋 Candidates</h2>
+  <div id="list"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { firebaseConfig } from "./firebaseConfig.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadCandidates() {
+      const snap = await getDocs(collection(db, "candidates"));
+      let html = "";
+      snap.forEach(doc => {
+        const c = doc.data();
+        html += `<p><b>${c.name}</b> (${c.roll})</p>`;
+      });
+      document.getElementById("list").innerHTML = html;
+    }
+
+    loadCandidates();
+  </script>
+</body>
+</html>
