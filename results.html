@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<script src="https://cdn.tailwindcss.com"></script>
+<body class="min-h-screen bg-gray-50">
+  <header class="bg-white shadow"><div class="max-w-4xl mx-auto px-6 py-4"><h1 class="text-xl font-bold">Live Results</h1></div></header>
+  <main class="max-w-4xl mx-auto px-6 py-8">
+    <div id="list" class="space-y-4"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { firebaseConfig } from "./js/firebaseConfig.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const list = document.getElementById('list');
+
+    // Load candidates then listen to votes
+    async function init(){
+      const map = {};
+      const cSnap = await getDocs(collection(db,'candidates'));
+      cSnap.forEach(d => map[d.id] = { id: d.id, ...d.data(), votes: 0 });
+
+      onSnapshot(collection(db,'votes'), snap => {
+        // reset counts
+        Object.values(map).forEach(x => x.votes = 0);
+        snap.forEach(s => {
+          const data = s.data();
+          if (data && data.candidateId && map[data.candidateId]) map[data.candidateId].votes++;
+        });
+        render(Object.values(map).sort((a,b)=>b.votes-a.votes));
+      });
+    }
+
+    function render(arr){
+      const max = Math.max(1, ...arr.map(x=>x.votes));
+      list.innerHTML = arr.map(c => `
+        <div class="bg-white p-4 rounded shadow flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">${c.symbol||'✪'}</div>
+          <div class="flex-1">
+            <div class="font-semibold">${c.name}</div>
+            <div class="text-sm text-gray-500">${c.manifesto||''}</div>
+            <div class="mt-2 bg-gray-200 rounded h-3 overflow-hidden">
+              <div style="width:${(c.votes/max)*100}%;" class="h-3 bg-indigo-600 transition-all"></div>
+            </div>
+          </div>
+          <div class="text-2xl font-bold">${c.votes}</div>
+        </div>
+      `).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>
