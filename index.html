@@ -1,41 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Law Fresher’s Fiesta</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Class Rep Election — Law Dept</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-r from-purple-700 to-pink-600 text-white flex flex-col items-center justify-center h-screen text-center">
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-700 text-white antialiased">
+  <header class="py-6">
+    <div class="max-w-5xl mx-auto px-6 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">⚖️</div>
+        <div>
+          <h1 class="text-2xl font-bold">Law Dept — Class Representative Election</h1>
+          <p class="text-sm text-white/80">Transparent • Secure • One person — one vote</p>
+        </div>
+      </div>
+      <nav class="space-x-4">
+        <a href="vote.html" class="px-3 py-2 bg-amber-400 text-indigo-900 rounded">Vote</a>
+        <a href="results.html" class="px-3 py-2 border rounded border-white/20">Results</a>
+        <a href="admin.html" class="px-3 py-2 border rounded border-white/20">Admin</a>
+      </nav>
+    </div>
+  </header>
 
-  <h1 class="text-4xl font-bold mb-4">🎉 Law Fresher’s Fiesta 2025 🎉</h1>
-  <p class="mb-6">Welcome to the party portal – Let’s make it unforgettable!</p>
+  <main class="max-w-4xl mx-auto px-6 py-12 text-center">
+    <h2 class="text-3xl font-extrabold mb-4">Make your voice count</h2>
+    <p class="text-white/80 mb-6">Sign in with Google to vote. Results will be live and auditable.</p>
 
-  <!-- Countdown -->
-  <div id="countdown" class="text-3xl font-mono mb-6"></div>
+    <div id="meta" class="bg-white/10 p-6 rounded-xl inline-block text-left text-sm">
+      Loading election status...
+    </div>
+  </main>
 
-  <!-- Buttons -->
-  <div class="space-x-4">
-    <a href="id.html" class="bg-white text-purple-700 px-6 py-3 rounded-xl shadow-lg hover:bg-pink-100 transition">Generate Your ID</a>
-  </div>
+  <footer class="text-center py-8 text-white/60">
+    © <span id="year"></span> Law Department
+  </footer>
 
-  <script>
-    // Simple countdown
-    const eventDate = new Date("2025-09-15T18:00:00").getTime(); 
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const diff = eventDate - now;
-      if (diff < 0) {
-        document.getElementById("countdown").innerText = "The Party Has Started 🎊!";
-        clearInterval(timer);
-        return;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { firebaseConfig } from "./js/firebaseConfig.js";
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    (async function loadMeta(){
+      try {
+        const ref = doc(db,'election','meta');
+        const snap = await getDoc(ref);
+        const el = document.getElementById('meta');
+        if (!snap.exists()) {
+          el.innerHTML = `<b>No election configured.</b> Admin: create election in admin panel.`;
+          return;
+        }
+        const data = snap.data();
+        el.innerHTML = `<div class="font-semibold">${data.title || 'Class Rep Election'}</div>
+                        <div>Status: <span class="font-medium">${data.status||'ready'}</span></div>
+                        <div>Start: ${data.startAt || 'N/A'}</div>
+                        <div>End: ${data.endAt || 'N/A'}</div>`;
+      } catch(e){
+        console.error(e);
+        document.getElementById('meta').innerText = 'Error loading election meta.';
       }
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % (1000 * 60)) / 1000);
-      document.getElementById("countdown").innerText = `${d}d ${h}h ${m}m ${s}s`;
-    }, 1000);
+    })();
   </script>
 </body>
 </html>
