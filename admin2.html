@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacy Admin Panel</title>
+
+  <!-- Integrated CSS -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #673ab7;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .container {
+      width: 90%;
+      margin: 20px auto;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #673ab7;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #4527a0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pharmacy Admin Panel</h1>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+      <h2>Add / Update Product</h2>
+      <form id="productForm">
+        <input type="hidden" id="productId">
+        <input type="text" id="name" placeholder="Medicine Name" required><br>
+        <input type="number" id="price" placeholder="Price" required><br>
+        <input type="number" id="stock" placeholder="Stock" required><br>
+        <button type="submit">Save Product</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Product List</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAbnFwUEduIFg7uC7mqy10ebB-bEFOv-z0",
+      authDomain: "lawfresher.firebaseapp.com",
+      projectId: "lawfresher",
+      storageBucket: "lawfresher.firebasestorage.app",
+      messagingSenderId: "670819580273",
+      appId: "1:670819580273:web:743d354f801d5a92f6ded0",
+      measurementId: "G-PD0NGZ2BR2"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <script src="admin.js"></script>
+</body>
+</html>
