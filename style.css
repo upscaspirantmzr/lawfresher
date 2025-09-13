@@ -1,39 +1,108 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f7fb;
-  text-align: center;
-  padding: 20px;
-}
+/* Reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-h1, h2, h3 {
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: #f5f6fa;
   color: #2c3e50;
 }
 
-.form, .panel {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  max-width: 500px;
-  margin: auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+header {
+  background: linear-gradient(135deg, #0a3d62, #1e3799);
+  color: white;
+  text-align: center;
+  padding: 1.5rem 1rem;
 }
 
-input, button {
-  display: block;
-  width: 90%;
-  margin: 10px auto;
-  padding: 10px;
-  border-radius: 8px;
+header h1 { font-size: 1.8rem; margin-bottom: .5rem; }
+header p { font-size: 1rem; }
+
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #1e3799;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: .75rem;
+  margin: .5rem 0;
   border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
-button {
-  background: #007bff;
+button, .btn {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: .75rem 1.5rem;
+  background: #1e3799;
   color: white;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+button:hover, .btn:hover { background: #0c2461; }
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  margin-top: 2rem;
+  background: #0a3d62;
+  color: white;
+  font-size: .9rem;
 }
 
-button:hover {
-  background: #0056b3;
+/* Admin Dashboard Layout */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 220px;
+  background: #1e3799;
+  color: white;
+  padding: 1rem;
+}
+.sidebar h3 {
+  margin-bottom: 1rem;
+}
+.sidebar a {
+  display: block;
+  color: white;
+  padding: .5rem 0;
+  text-decoration: none;
+}
+.sidebar a:hover {
+  text-decoration: underline;
+}
+.admin-main {
+  flex: 1;
+  padding: 2rem;
+  background: #f1f2f6;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+.table th, .table td {
+  padding: .75rem;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+.table th {
+  background: #1e3799;
+  color: white;
 }
